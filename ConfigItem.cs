@@ -31,9 +31,9 @@ namespace LibSciyonVFD
         /// <summary>
         /// 功能码是否是只读的
         /// </summary>
-        public bool IsReadonly { get; internal set; }
+        public ReadOnly IsReadonly { get; internal set; }
 
-        public ConfigItem(T value, ConfigIndex index, string discription, bool readonly_ = false)
+        public ConfigItem(T value, ConfigIndex index, string discription, ReadOnly readonly_ = ReadOnly.Never)
         {
             Value = value;
             Index = index;
@@ -42,7 +42,7 @@ namespace LibSciyonVFD
             IsReadonly = readonly_;
         }
 
-        public ConfigItem(T value, ConfigIndex index, string discription, T defaultvalue, bool readonly_ = false)
+        public ConfigItem(T value, ConfigIndex index, string discription, T defaultvalue, ReadOnly readonly_ = ReadOnly.Never)
         {
             Value = value;
             Index = index;
@@ -52,5 +52,12 @@ namespace LibSciyonVFD
             HasDefaultValue = true;
             IsReadonly = readonly_;
         }
+    }
+
+    public enum ReadOnly
+    {
+        Always = 0,
+        WhenRuning = 1,
+        Never = 2
     }
 }
