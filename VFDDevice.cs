@@ -9,6 +9,7 @@ namespace LibSciyonVFD
         public byte Addr { private set; get; }
         public uint BaudRate { private set; get; }
         public PortConfig CommConfig { private set; get; }
+        public VFDConfiguration Config { private set; get; }
 
         public enum PortConfig
         {
@@ -20,6 +21,14 @@ namespace LibSciyonVFD
             R182E=5
         }
 
+        public VFDDevice(SerialPort port, byte addr, uint baudRate, PortConfig commConfig, VFDConfiguration config=null)
+        {
+            this.port = port;
+            Addr = addr;
+            BaudRate = baudRate;
+            CommConfig = commConfig;
+            Config = config;
+        }
 
     }
 }

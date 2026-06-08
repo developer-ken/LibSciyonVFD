@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LibSciyonVFD
 {
-    public class ConfigIndex
+    public class ConfigIndex : IEquatable<ConfigIndex>,IEquatable<string>
     {
         /// <summary>
         /// 主功能域和子序列号，例如P0-17中的P0部分
@@ -117,6 +117,16 @@ namespace LibSciyonVFD
         public override string ToString()
         {
             return CodeDomain + "-" + CodeId.ToString("X2");
+        }
+
+        public bool Equals(ConfigIndex other)
+        {
+            return CodeDomain.Equals(other.CodeDomain) && CodeId.Equals(other.CodeId);
+        }
+
+        public bool Equals(string other)
+        {
+            return ToString().Equals(other);
         }
     }
 }
