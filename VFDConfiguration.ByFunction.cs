@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace LibSciyonVFD
+﻿namespace LibSciyonVFD
 {
     public partial class VFDConfiguration
     {

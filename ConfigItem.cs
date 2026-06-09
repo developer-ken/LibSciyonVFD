@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LibSciyonVFD
 {
-    public class ConfigItem<T>
+    public class ConfigItem<T> : IConfigType
     {
         /// <summary>
         /// 功能码的值
@@ -15,6 +15,12 @@ namespace LibSciyonVFD
         /// 功能码的默认值
         /// </summary>
         public T DefaultValue { get; internal set; }
+
+        public Type ValueType()
+        {
+            return typeof(T);
+        }
+
         /// <summary>
         /// 功能码地址索引
         /// </summary>
