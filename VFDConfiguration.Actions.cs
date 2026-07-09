@@ -14,12 +14,12 @@ namespace LibSciyonVFD
         // Dictionary of alias references indexed by string like "P0-00".
         // Built via reflection so it automatically includes all alias properties
         // with the naming pattern Group_DD (e.g. P0_00, A1_12, n1_02).
-        private Dictionary<string, IConfigType> _aliasByCode;
-        public Dictionary<string, IConfigType> ByCode => _aliasByCode ?? (_aliasByCode = BuildAliasDictionary());
+        private Dictionary<string,  ConfigItem> _aliasByCode;
+        public Dictionary<string, ConfigItem> ByCode => _aliasByCode ?? (_aliasByCode = BuildAliasDictionary());
 
-        private Dictionary<string, IConfigType> BuildAliasDictionary()
+        private Dictionary<string, ConfigItem> BuildAliasDictionary()
         {
-            var dict = new Dictionary<string, IConfigType>();
+            var dict = new Dictionary<string, ConfigItem>();
             var props = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (var p in props)
             {
@@ -32,7 +32,7 @@ namespace LibSciyonVFD
                 if (suffix.Length != 2) continue;
                 if (!char.IsDigit(suffix[0]) || !char.IsDigit(suffix[1])) continue;
                 var key = parts[0] + "-" + suffix;
-                var val = (IConfigType)p.GetValue(this);
+                var val = (ConfigItem)p.GetValue(this);
                 dict[key] = val;
             }
             return dict;
@@ -131,18 +131,7 @@ namespace LibSciyonVFD
 
                 if (ByCode.TryGetValue(kvp.Key, out var targetItem))
                 {
-                    var sourceItem = kvp.Value;
-                    var valueType = sourceItem.ValueType();
-
-                    // 使用反射获取源项的Value字段
-                    var sourceField = sourceItem.GetType().GetField("Value", BindingFlags.Public | BindingFlags.Instance);
-                    var targetField = targetItem.GetType().GetField("Value", BindingFlags.Public | BindingFlags.Instance);
-
-                    if (sourceField != null && targetField != null)
-                    {
-                        var sourceValue = sourceField.GetValue(sourceItem);
-                        targetField.SetValue(targetItem, sourceValue);
-                    }
+                    targetItem.RawValue = kvp.Value.RawValue;
                 }
             }
         }

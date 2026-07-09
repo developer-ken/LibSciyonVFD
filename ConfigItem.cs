@@ -10,7 +10,14 @@ namespace LibSciyonVFD
         /// <summary>
         /// 功能码的值
         /// </summary>
-        public ushort RawValue;
+        public ushort RawValue
+        {
+            get => _rawvalue;
+            set { _rawvalue = value; Modified = true; }
+        }
+
+        private ushort _rawvalue;
+        public bool Modified { get; internal set; } = false;
 
         /// <summary>
         /// 功能码的默认值
@@ -19,7 +26,7 @@ namespace LibSciyonVFD
 
         public float AsFloat
         {
-            get => (float)RawValue / (float)Shift;
+            get => (float)RawValue / Shift;
             set => RawValue = (ushort)(value * Shift);
         }
 

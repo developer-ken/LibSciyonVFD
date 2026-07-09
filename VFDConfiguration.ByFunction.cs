@@ -1936,20 +1936,18 @@
             new ConfigIndex("PF-06"),
             "电机过温设定值\n范围：PF-07~180.0℃\n达到该温度报 E.OH2。",
             ReadOnly.Never, shift: 10);
-        /// <summary>
-        /// //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// </summary>
+
         public ConfigItem MotorOverTempWarnValue = new ConfigItem(
             750, // 75.0℃
             new ConfigIndex("PF-07"),
             "电机过温预警值\n超过该值并持续 PF-08 时间后按 PF-09 动作处理。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem MotorOverTempWarnTime = new ConfigItem(
             600, // 60.0s
             new ConfigIndex("PF-08"),
             "电机过温预警时间\n范围：0.0~6000.0s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem MotorOverTempWarnAction = new ConfigItem(
             0,
@@ -1961,25 +1959,25 @@
             150,
             new ConfigIndex("PF-10"),
             "转矩保护上限（相对额定转矩）\n范围：0.0%~300.0%\n超过该值并持续 PF-11 时间触发预警动作。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem TorqueUpperDetectTime = new ConfigItem(
             5, // 0.5s
             new ConfigIndex("PF-11"),
             "转矩上限检出时间\n范围：0.0~60.0s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem TorqueProtectLower = new ConfigItem(
             0,
             new ConfigIndex("PF-12"),
             "转矩保护下限（相对额定转矩）\n范围：0.0%~300.0%\n低于该值并持续 PF-13 时间触发预警动作。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem TorqueLowerDetectTime = new ConfigItem(
             1, // 0.1s
             new ConfigIndex("PF-13"),
             "转矩下限检出时间\n范围：0.0~60.0s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem TorqueProtectAction = new ConfigItem(
             0,
@@ -1991,25 +1989,25 @@
             900, // 90.0℃
             new ConfigIndex("PF-15"),
             "模块过温设定值\n范围：PF-16~120.0℃\n达到该温度报 E.OH1。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem ModuleOverTempWarnValue = new ConfigItem(
             750, // 75.0℃
             new ConfigIndex("PF-16"),
             "模块过温预警值\n超过该值并持续 PF-18 时间按 PF-19 动作处理。\n若温度低于 PF-17 则判定传感器失效。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem TempSensorFailValue = new ConfigItem(
             -300, // -30.0℃
             new ConfigIndex("PF-17"),
             "温度传感器失效值\n范围：-40.0℃~PF-16",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem ModuleOverTempDetectTime = new ConfigItem(
             10, // 1.0s
             new ConfigIndex("PF-18"),
             "模块过温检测时间\n范围：0.0~180.0s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem ModuleOverTempWarnAction = new ConfigItem(
             0,
@@ -2027,13 +2025,13 @@
             450, // 45.0℃
             new ConfigIndex("PF-21"),
             "风扇开启温度\n范围：0.0℃~PF-16",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem FanStopDelay = new ConfigItem(
             100, // 10.0s
             new ConfigIndex("PF-22"),
             "风扇停机延时\n范围：0.0~300.0s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem InputPhaseLossProtect = new ConfigItem(
             0,
@@ -2063,7 +2061,7 @@
             20, // 2.0s
             new ConfigIndex("PF-27"),
             "故障自动复位间隔\n范围：0.1~60.0s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem FaultAutoResetConfig = new ConfigItem(
             0,
@@ -2085,25 +2083,25 @@
             0,
             new ConfigIndex("A0-01"),
             "休眠频率\n当设定频率 ≤ A0-01 且持续 A0-02 时间后进入休眠。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem SleepDelay = new ConfigItem(
             0,
             new ConfigIndex("A0-02"),
             "休眠延时\n范围：0.0~6500.0s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem WakeFrequency = new ConfigItem(
             0,
             new ConfigIndex("A0-03"),
             "唤醒频率\n休眠状态下，当设定频率 ≥ A0-03 且持续 A0-04 时间后唤醒。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem WakeDelay = new ConfigItem(
             0,
             new ConfigIndex("A0-04"),
             "唤醒延时\n范围：0.0~6500.0s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem TimerUnit = new ConfigItem(
             0,
@@ -2115,109 +2113,109 @@
             0,
             new ConfigIndex("A0-06"),
             "本次运行定时设置\n0：无定时\n0.1~6500.0s：定时时间\n到达后停机并可输出指示。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem ZeroCurrentWidth = new ConfigItem(
             5, // 0.05%
             new ConfigIndex("A0-07"),
             "零电流检出宽度（相对额定电流）\n0.0%~200.0%\n≤该范围且持续 A0-08 时间判定为零电流。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10000);
 
         public ConfigItem ZeroCurrentDelay = new ConfigItem(
             5, // 0.5s
             new ConfigIndex("A0-08"),
             "零电流检出延时\n范围：0.0~30.0s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem CurrentLimitDetect = new ConfigItem(
             200, // 2%
             new ConfigIndex("A0-09"),
             "电流超限检测（相对额定电流）\n0.0%~200.0%\n达到并持续 A0-10 时间判定超限。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10000);
 
         public ConfigItem CurrentLimitDelay = new ConfigItem(
             20, // 2.0s
             new ConfigIndex("A0-10"),
             "电流超限检测延时\n范围：0.0~30.0s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10);
 
         public ConfigItem AnyCurrentDetect1 = new ConfigItem(
             100, // 1%
             new ConfigIndex("A0-11"),
             "任意电流检测1\n设定检测电流大小。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10000);
 
         public ConfigItem AnyCurrentWidth1 = new ConfigItem(
             0,
             new ConfigIndex("A0-12"),
             "电流检测1宽度\n范围：0.0%~300.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem AnyCurrentDetect2 = new ConfigItem(
             100, // 1%
             new ConfigIndex("A0-13"),
             "任意电流检测2\n设定检测电流大小。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 10000);
 
         public ConfigItem AnyCurrentWidth2 = new ConfigItem(
             0,
             new ConfigIndex("A0-14"),
             "电流检测2宽度\n范围：0.0%~300.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem TargetFreqArrival = new ConfigItem(
             0,
             new ConfigIndex("A0-15"),
             "指定频率到达\n非零：运行频率 ≥ 该值输出有效\n零：运行频率 = 设定频率输出有效。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem FDT1Value = new ConfigItem(
             5000, // 50.00Hz
             new ConfigIndex("A0-16"),
             "频率检测值 FDT1\n输出频率 ≤ (A0-16 + A0-17) 时输出有效。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem FDT1Width = new ConfigItem(
             5, // 0.05
             new ConfigIndex("A0-17"),
             "FDT1 检出宽度\n范围：0.0%~100.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem FDT2Value = new ConfigItem(
             5000,
             new ConfigIndex("A0-18"),
             "频率检测值 FDT2\n输出频率 ≥ (A0-18 + A0-19) 时输出有效。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem FDT2Width = new ConfigItem(
             5,
             new ConfigIndex("A0-19"),
             "FDT2 检出宽度\n范围：0.0%~100.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem AnyFreqDetect1 = new ConfigItem(
             5000,
             new ConfigIndex("A0-20"),
             "任意频率检测1\n≥(A0-20 + A0-21) 输出有效\n≤(A0-20 - A0-21) 输出无效。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem AnyFreqWidth1 = new ConfigItem(
             0,
             new ConfigIndex("A0-21"),
             "任意频率到达检测宽度1\n范围：0.0%~100.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem AnyFreqDetect2 = new ConfigItem(
             5000,
             new ConfigIndex("A0-22"),
             "任意频率检测2\n(A0-22 - A0-23) ≤ 输出频率 ≤ (A0-22 + A0-23) 输出有效。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem AnyFreqWidth2 = new ConfigItem(
             0,
             new ConfigIndex("A0-23"),
             "任意频率到达检测宽度2\n范围：0.0%~100.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem AIDetectConfig = new ConfigItem(
             0,
@@ -2229,13 +2227,13 @@
             0,
             new ConfigIndex("A0-25"),
             "AI 超限值\n超过该电压报 E.AiH\n0.00V 表示不检测。",
-            ReadOnly.WhenRuning);
+            ReadOnly.WhenRuning, shift: 100);
 
         public ConfigItem AILossValue = new ConfigItem(
             0,
             new ConfigIndex("A0-26"),
             "AI 丢失值\n低于该电压报 E.AiL\n0.00V 表示不检测。",
-            ReadOnly.WhenRuning);
+            ReadOnly.WhenRuning, shift: 100);
 
         public ConfigItem AIInputAccuracy = new ConfigItem(
             0,
@@ -2253,13 +2251,13 @@
             100, // 1.00 = 100%
             new ConfigIndex("A0-29"),
             "用电量累计校正系数\n范围：0.0%~200.0%",
-            ReadOnly.WhenRuning);
+            ReadOnly.WhenRuning, shift: 1000);
 
         public ConfigItem EnergyPrice = new ConfigItem(
             100, // 1.00元
             new ConfigIndex("A0-30"),
             "用电量每千瓦单价\n范围：0.00~10.00元",
-            ReadOnly.WhenRuning);
+            ReadOnly.WhenRuning, shift: 100);
 
         public ConfigItem EnergyCostLow = new ConfigItem(
             0,
@@ -2277,7 +2275,7 @@
             200, // 0.200s
             new ConfigIndex("A0-33"),
             "电机切换时间\n电机1/电机2在线切换时外部接触器动作时间。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem CommFreqMode = new ConfigItem(
             0,
@@ -2293,97 +2291,97 @@
             0,
             new ConfigIndex("A1-00"),
             "AI1 曲线 2 点 0 值\n范围：0.00~10.00V(20mA)\nP6-17=1 时启用多点曲线。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem AI1CurvePoint0Setting = new ConfigItem(
             0,
             new ConfigIndex("A1-01"),
             "AI1 曲线 2 点 0 设定\n范围：-200.0%~200.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem AI1CurvePoint1Value = new ConfigItem(
             0,
             new ConfigIndex("A1-02"),
             "AI1 曲线 2 点 1 值\n范围：0.00~10.00V(20mA)",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem AI1CurvePoint1Setting = new ConfigItem(
             0,
             new ConfigIndex("A1-03"),
             "AI1 曲线 2 点 1 设定\n范围：-200.0%~200.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem AI1CurvePoint2Value = new ConfigItem(
             0,
             new ConfigIndex("A1-04"),
             "AI1 曲线 2 点 2 值\n范围：0.00~10.00V(20mA)",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem AI1CurvePoint2Setting = new ConfigItem(
             0,
             new ConfigIndex("A1-05"),
             "AI1 曲线 2 点 2 设定\n范围：-200.0%~200.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem AI1CurvePoint3Value = new ConfigItem(
             0,
             new ConfigIndex("A1-06"),
             "AI1 曲线 2 点 3 值\n范围：0.00~10.00V(20mA)",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem AI1CurvePoint3Setting = new ConfigItem(
             0,
             new ConfigIndex("A1-07"),
             "AI1 曲线 2 点 3 设定\n范围：-200.0%~200.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem AI2CurvePoint0Value = new ConfigItem(
             0,
             new ConfigIndex("A1-08"),
             "AI2 曲线 2 点 0 值\n范围：0.00~10.00V\nP6-25=1 时启用多点曲线。",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem AI2CurvePoint0Setting = new ConfigItem(
             0,
             new ConfigIndex("A1-09"),
             "AI2 曲线 2 点 0 设定\n范围：-200.0%~200.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem AI2CurvePoint1Value = new ConfigItem(
             0,
             new ConfigIndex("A1-10"),
             "AI2 曲线 2 点 1 值\n范围：0.00~10.00V",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem AI2CurvePoint1Setting = new ConfigItem(
             0,
             new ConfigIndex("A1-11"),
             "AI2 曲线 2 点 1 设定\n范围：-200.0%~200.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem AI2CurvePoint2Value = new ConfigItem(
             0,
             new ConfigIndex("A1-12"),
             "AI2 曲线 2 点 2 值\n范围：0.00~10.00V",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem AI2CurvePoint2Setting = new ConfigItem(
             0,
             new ConfigIndex("A1-13"),
             "AI2 曲线 2 点 2 设定\n范围：-200.0%~200.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem AI2CurvePoint3Value = new ConfigItem(
             0,
             new ConfigIndex("A1-14"),
             "AI2 曲线 2 点 3 值\n范围：0.00~10.00V",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 100);
 
         public ConfigItem AI2CurvePoint3Setting = new ConfigItem(
             0,
             new ConfigIndex("A1-15"),
             "AI2 曲线 2 点 3 设定\n范围：-200.0%~200.0%",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         #endregion
 
@@ -2453,25 +2451,25 @@
             0,
             new ConfigIndex("A2-10"),
             "虚拟 VDO1 延时\n范围：0.000~60.000s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem VirtualVDO2Delay = new ConfigItem(
             0,
             new ConfigIndex("A2-11"),
             "虚拟 VDO2 延时\n范围：0.000~60.000s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem VirtualVDO3Delay = new ConfigItem(
             0,
             new ConfigIndex("A2-12"),
             "虚拟 VDO3 延时\n范围：0.000~60.000s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem VirtualVDO4Delay = new ConfigItem(
             0,
             new ConfigIndex("A2-13"),
             "虚拟 VDO4 延时\n范围：0.000~60.000s",
-            ReadOnly.Never);
+            ReadOnly.Never, shift: 1000);
 
         public ConfigItem VirtualVDOActiveLevel = new ConfigItem(
             1111,
@@ -2723,13 +2721,13 @@
             0,
             new ConfigIndex("U0-00"),
             "运行频率 (0.00~600.00Hz)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem SetFrequency = new ConfigItem(
             0,
             new ConfigIndex("U0-01"),
             "设定频率 (0.00~600.00Hz)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem BusVoltage = new ConfigItem(
             0,
@@ -2747,31 +2745,31 @@
             0,
             new ConfigIndex("U0-04"),
             "输出电流 (0~6553.5A)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 10);
 
         public ConfigItem OutputFrequency = new ConfigItem(
             0,
             new ConfigIndex("U0-05"),
             "输出频率 (0.00~600.00Hz)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem SetTorque = new ConfigItem(
             0,
             new ConfigIndex("U0-06"),
             "设定转矩 (-200.0%~200.0%)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 1000);
 
         public ConfigItem OutputTorque = new ConfigItem(
             0,
             new ConfigIndex("U0-07"),
             "输出转矩 (-200.0%~200.0%)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 1000);
 
         public ConfigItem OutputPower = new ConfigItem(
             0,
             new ConfigIndex("U0-08"),
             "输出功率 (-3000.0~3000.0kW)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 10);
 
         public ConfigItem MotorSpeed = new ConfigItem(
             0,
@@ -2783,13 +2781,13 @@
             0,
             new ConfigIndex("U0-10"),
             "散热器温度 (-40.0~100.0℃)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 10);
 
         public ConfigItem MotorTemp = new ConfigItem(
             0,
             new ConfigIndex("U0-11"),
             "电机温度 (-40.0~100.0℃)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 10);
 
         public ConfigItem RunStatus = new ConfigItem(
             0,
@@ -2801,13 +2799,13 @@
             0,
             new ConfigIndex("U0-13"),
             "AI1 电压 (0.00~10.00V)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem AI2Voltage = new ConfigItem(
             0,
             new ConfigIndex("U0-14"),
             "AI2 电压 (0.00~10.00V)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem InputTerminalStatus = new ConfigItem(
             0,
@@ -2825,19 +2823,19 @@
             0,
             new ConfigIndex("U0-17"),
             "脉冲输入 PFI (0.00~50.00kHz)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem AO1Output = new ConfigItem(
             0,
             new ConfigIndex("U0-18"),
             "AO1 输出 (0.00~10.00V)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem PulseOutputPFO = new ConfigItem(
             0,
             new ConfigIndex("U0-19"),
             "脉冲输出 PFO (0.00~50.00kHz)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem VirtualVDIStatus = new ConfigItem(
             0,
@@ -2867,13 +2865,13 @@
             0,
             new ConfigIndex("U0-24"),
             "PID 给定 (0.0%~100.0%)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 1000);
 
         public ConfigItem PIDFeedback = new ConfigItem(
             0,
             new ConfigIndex("U0-25"),
             "PID 反馈 (0.0%~100.0%)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 1000);
 
         public ConfigItem CounterValue = new ConfigItem(
             0,
@@ -2903,13 +2901,13 @@
             0,
             new ConfigIndex("U0-30"),
             "V/F 分离目标电压 (0.0%~100.0%)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 1000);
 
         public ConfigItem VFSeparatedOutputVoltage = new ConfigItem(
             0,
             new ConfigIndex("U0-31"),
             "V/F 分离输出电压 (0.0%~100.0%)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 1000);
 
         public ConfigItem PLCStage = new ConfigItem(
             0,
@@ -2921,13 +2919,13 @@
             0,
             new ConfigIndex("U0-33"),
             "PLC 当前阶段运行时间 (0.0~6500.0s)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 10);
 
         public ConfigItem EnergyLow = new ConfigItem(
             0,
             new ConfigIndex("U0-34"),
             "用电量累计低位 (0.0~999.9kWh)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 10);
 
         public ConfigItem EnergyHigh = new ConfigItem(
             0,
@@ -2939,7 +2937,7 @@
             0,
             new ConfigIndex("U0-36"),
             "UP/DN 偏置值 (-50.00~50.00Hz)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem SystemWord = new ConfigItem(
             0,
@@ -2967,19 +2965,19 @@
             0,
             new ConfigIndex("U1-02"),
             "故障1时运行频率 (0.00~600.00Hz)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem Fault1OutFreq = new ConfigItem(
             0,
             new ConfigIndex("U1-03"),
             "故障1时输出频率 (0.00~600.00Hz)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem Fault1OutCurrent = new ConfigItem(
             0,
             new ConfigIndex("U1-04"),
             "故障1时输出电流 (0.0~6553.5A)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 10);
 
         public ConfigItem Fault1BusVoltH = new ConfigItem(
             0,
@@ -3003,7 +3001,7 @@
             0,
             new ConfigIndex("U1-08"),
             "故障1时模块温度 (-40.0~100.0℃)",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 10);
 
         public ConfigItem Fault1InputStatus = new ConfigItem(
             0,
@@ -3027,19 +3025,19 @@
             0,
             new ConfigIndex("U1-12"),
             "故障2时运行频率",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem Fault2OutFreq = new ConfigItem(
             0,
             new ConfigIndex("U1-13"),
             "故障2时输出频率",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem Fault2OutCurrent = new ConfigItem(
             0,
             new ConfigIndex("U1-14"),
             "故障2时输出电流",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem Fault2BusVoltH = new ConfigItem(
             0,
@@ -3063,7 +3061,7 @@
             0,
             new ConfigIndex("U1-18"),
             "故障2时模块温度",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 10);
 
         public ConfigItem Fault2InputStatus = new ConfigItem(
             0,
@@ -3087,19 +3085,19 @@
             0,
             new ConfigIndex("U1-22"),
             "故障3时运行频率",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem Fault3OutFreq = new ConfigItem(
             0,
             new ConfigIndex("U1-23"),
             "故障3时输出频率",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 100);
 
         public ConfigItem Fault3OutCurrent = new ConfigItem(
             0,
             new ConfigIndex("U1-24"),
             "故障3时输出电流",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 10);
 
         public ConfigItem Fault3BusVoltH = new ConfigItem(
             0,
@@ -3123,7 +3121,7 @@
             0,
             new ConfigIndex("U1-28"),
             "故障3时模块温度",
-            ReadOnly.Always);
+            ReadOnly.Always, shift: 10);
 
         public ConfigItem Fault3InputStatus = new ConfigItem(
             0,
