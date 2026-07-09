@@ -122,12 +122,28 @@ namespace LibSciyonVFD
             }
         }
 
-        public void SyncFrom(VFDConfiguration conf, params string[]? skips)
+        public void CopyFrom(VFDConfiguration conf, params string[]? skips)
         {
-            foreach(IConfigType confitem in conf.ByCode.Values)
+            var skipSet = skips != null ? new HashSet<string>(skips) : new HashSet<string>();
+            foreach (var kvp in conf.ByCode)
             {
-                var item = (confitem.ValueType())confitem;
-                if(ByCode.ContainsKey(confitem)
+                if (skipSet.Contains(kvp.Key)) continue;
+
+                if (ByCode.TryGetValue(kvp.Key, out var targetItem))
+                {
+                    var sourceItem = kvp.Value;
+                    var valueType = sourceItem.ValueType();
+
+                    // 使用反射获取源项的Value字段
+                    var sourceField = sourceItem.GetType().GetField("Value", BindingFlags.Public | BindingFlags.Instance);
+                    var targetField = targetItem.GetType().GetField("Value", BindingFlags.Public | BindingFlags.Instance);
+
+                    if (sourceField != null && targetField != null)
+                    {
+                        var sourceValue = sourceField.GetValue(sourceItem);
+                        targetField.SetValue(targetItem, sourceValue);
+                    }
+                }
             }
         }
     }

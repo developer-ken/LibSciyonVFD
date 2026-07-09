@@ -5,20 +5,22 @@ using System.Text;
 
 namespace LibSciyonVFD
 {
-    public class ConfigItem<T> : IConfigType
+    public class ConfigItem
     {
         /// <summary>
         /// 功能码的值
         /// </summary>
-        public T Value;
+        public ushort RawValue;
+
         /// <summary>
         /// 功能码的默认值
         /// </summary>
-        public T DefaultValue { get; internal set; }
+        public ushort DefaultRawValue { get; internal set; }
 
-        public Type ValueType()
+        public float AsFloat
         {
-            return typeof(T);
+            get => (float)RawValue / (float)Shift;
+            set => RawValue = (ushort)(value * Shift);
         }
 
         /// <summary>
@@ -39,24 +41,50 @@ namespace LibSciyonVFD
         /// </summary>
         public ReadOnly IsReadonly { get; internal set; }
 
-        public ConfigItem(T value, ConfigIndex index, string discription, ReadOnly readonly_ = ReadOnly.Never)
+        public int Shift { get; internal set; }
+
+        public ConfigItem(ushort value, ConfigIndex index, string discription, ReadOnly readonly_ = ReadOnly.Never, int shift = 1)
         {
-            Value = value;
+            RawValue = value;
             Index = index;
             Discription = discription;
             HasDefaultValue = false;
             IsReadonly = readonly_;
+            Shift = shift;
         }
 
-        public ConfigItem(T value, ConfigIndex index, string discription, T defaultvalue, ReadOnly readonly_ = ReadOnly.Never)
+        public ConfigItem(ushort value, ConfigIndex index, string discription, ushort defaultvalue, ReadOnly readonly_ = ReadOnly.Never, int shift = 1)
         {
-            Value = value;
+            RawValue = value;
             Index = index;
             Discription = discription;
             HasDefaultValue = false;
             Discription = discription;
             HasDefaultValue = true;
             IsReadonly = readonly_;
+            Shift = shift;
+        }
+
+        public ConfigItem(float value, ConfigIndex index, string discription, ReadOnly readonly_ = ReadOnly.Never, int shift = 1)
+        {
+            Index = index;
+            Discription = discription;
+            HasDefaultValue = false;
+            IsReadonly = readonly_;
+            Shift = shift;
+            AsFloat = value;
+        }
+
+        public ConfigItem(float value, ConfigIndex index, string discription, ushort defaultvalue, ReadOnly readonly_ = ReadOnly.Never, int shift = 1)
+        {
+            Index = index;
+            Discription = discription;
+            HasDefaultValue = false;
+            Discription = discription;
+            HasDefaultValue = true;
+            IsReadonly = readonly_;
+            Shift = shift;
+            AsFloat = value;
         }
     }
 

@@ -7,28 +7,35 @@ namespace LibSciyonVFD
     {
         private SerialPort port;
         public byte Addr { private set; get; }
-        public uint BaudRate { private set; get; }
+        public int BaudRate { private set; get; }
         public PortConfig CommConfig { private set; get; }
         public VFDConfiguration Config { private set; get; }
 
+        private ModbusRTUMaster modbus;
+
         public enum PortConfig
         {
-            R181N=0,
-            R181O=1,
-            R181E=2,
-            R182N=3,
-            R182O=4,
-            R182E=5
+            R181N = 0,
+            R181O = 1,
+            R181E = 2,
+            R182N = 3,
+            R182O = 4,
+            R182E = 5
         }
 
-        public VFDDevice(SerialPort port, byte addr, uint baudRate, PortConfig commConfig, VFDConfiguration config=null)
+        public VFDDevice(SerialPort port, byte addr, int baudRate, PortConfig commConfig, VFDConfiguration config = null)
         {
             this.port = port;
             Addr = addr;
             BaudRate = baudRate;
             CommConfig = commConfig;
             Config = config;
+            modbus = new ModbusRTUMaster(port, baudRate, commConfig, 500);
         }
 
+        public void ReadConfigAll()
+        {
+            modbus.ReadHoldingRegisters(Addr,)
+        }
     }
 }

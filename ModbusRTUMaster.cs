@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Ports;
 using System.Threading;
-using System.Collections.Generic;
+using static LibSciyonVFD.VFDDevice;
 
 namespace LibSciyonVFD
 {
@@ -10,10 +11,13 @@ namespace LibSciyonVFD
     {
         private readonly SerialPort _port;
         private readonly int _responseTimeoutMs;
-        private readonly object _sync = new object();
+        private int BaudRate;
+        private PortConfig CommConfig;
 
-        public ModbusRTUMaster(SerialPort port, int responseTimeoutMs = 1000)
+        public ModbusRTUMaster(SerialPort port, int baudRate, PortConfig commConfig, int responseTimeoutMs = 1000)
         {
+            BaudRate = baudRate;
+            CommConfig = commConfig;
             _port = port ?? throw new ArgumentNullException(nameof(port));
             _responseTimeoutMs = responseTimeoutMs;
             // make sure port has sensible timeouts
@@ -23,6 +27,72 @@ namespace LibSciyonVFD
                 _port.WriteTimeout = 1000;
             }
             catch { }
+        }
+
+        public void UpdatePortconfig()
+        {
+            bool changed = false;
+            changed |= _port.BaudRate != BaudRate;
+            switch (CommConfig)
+            {
+                case PortConfig.R181N:
+                    changed |= _port.DataBits != 8;
+                    changed |= _port.StopBits != StopBits.One;
+                    changed |= _port.Parity != Parity.None;
+                    break;
+                case PortConfig.R181O:
+                    changed |= _port.DataBits != 8;
+                    changed |= _port.StopBits != StopBits.One;
+                    changed |= _port.Parity != Parity.Odd;
+                    break;
+                case PortConfig.R182N:
+                    changed |= _port.DataBits != 8;
+                    changed |= _port.StopBits != StopBits.Two;
+                    changed |= _port.Parity != Parity.None;
+                    break;
+                case PortConfig.R182O:
+                    changed |= _port.DataBits != 8;
+                    changed |= _port.StopBits != StopBits.Two;
+                    changed |= _port.Parity != Parity.Odd;
+                    break;
+                case PortConfig.R182E:
+                    changed |= _port.DataBits != 8;
+                    changed |= _port.StopBits != StopBits.Two;
+                    changed |= _port.Parity != Parity.Even;
+                    break;
+            }
+            if (!changed) return;
+            _port.Close();
+            _port.BaudRate = BaudRate;
+            switch (CommConfig)
+            {
+                case PortConfig.R181N:
+                    _port.DataBits = 8;
+                    _port.StopBits = StopBits.One;
+                    _port.Parity = Parity.None;
+                    break;
+                case PortConfig.R181O:
+                    _port.DataBits = 8;
+                    _port.StopBits = StopBits.One;
+                    _port.Parity = Parity.Odd;
+                    break;
+                case PortConfig.R182N:
+                    _port.DataBits = 8;
+                    _port.StopBits = StopBits.Two;
+                    _port.Parity = Parity.None;
+                    break;
+                case PortConfig.R182O:
+                    _port.DataBits = 8;
+                    _port.StopBits = StopBits.Two;
+                    _port.Parity = Parity.Odd;
+                    break;
+                case PortConfig.R182E:
+                    _port.DataBits = 8;
+                    _port.StopBits = StopBits.Two;
+                    _port.Parity = Parity.Even;
+                    break;
+            }
+            _port.Open();
         }
 
         public ushort[] ReadHoldingRegisters(byte slaveAddress, ushort startAddress, ushort quantity)
@@ -137,8 +207,9 @@ namespace LibSciyonVFD
 
         private byte[] SendAndReceive(byte[] request)
         {
-            lock (_sync)
+            lock (_port)
             {
+                UpdatePortconfig();
                 // clear existing input to avoid mixing previous data
                 try { if (_port.IsOpen) _port.DiscardInBuffer(); } catch { }
 
