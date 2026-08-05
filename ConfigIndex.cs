@@ -111,7 +111,7 @@ namespace LibSciyonVFD
         public ConfigIndex(string indexstr)
         {
             CodeDomain = indexstr.Substring(0, 2);
-            CodeId = Convert.ToByte(indexstr.Substring(3), 16);
+            CodeId = Convert.ToByte(indexstr.Substring(3), 10);
         }
 
         public override string ToString()

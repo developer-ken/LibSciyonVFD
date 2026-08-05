@@ -213,6 +213,7 @@ namespace LibSciyonVFD
                 // clear existing input to avoid mixing previous data
                 try { if (_port.IsOpen) _port.DiscardInBuffer(); } catch { }
 
+                /*
                 // send one byte at a time to support collision detection / echo handling
                 for (int i = 0; i < request.Length; i++)
                 {
@@ -241,6 +242,9 @@ namespace LibSciyonVFD
                     }
                     catch (TimeoutException) { }
                 }
+                */
+
+                _port.Write(request, 0, request.Length);
 
                 // now wait for response
                 var sw = System.Diagnostics.Stopwatch.StartNew();
