@@ -7,7 +7,7 @@ using static LibSciyonVFD.VFDDevice;
 
 namespace LibSciyonVFD
 {
-    internal class ModbusRTUMaster
+    public class ModbusRTUMaster
     {
         private readonly SerialPort _port;
         private readonly int _responseTimeoutMs;
