@@ -19,41 +19,9 @@ namespace LibSciyonVFD
 
         private Dictionary<string, ConfigItem> BuildAliasDictionary()
         {
-            var dict = new Dictionary<string, ConfigItem>();
-            // Include both public instance properties and public instance fields.
-            var type = this.GetType();
-
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var p in props)
-            {
-                var name = p.Name;
-                if (string.IsNullOrEmpty(name)) continue;
-                var parts = name.Split('_');
-                if (parts.Length != 2) continue;
-                var suffix = parts[1];
-                // only accept two-digit numeric suffix like "00", "01", ...
-                if (suffix.Length != 2) continue;
-                if (!char.IsDigit(suffix[0]) || !char.IsDigit(suffix[1])) continue;
-                var key = parts[0] + "-" + suffix;
-                var val = p.GetValue(this) as ConfigItem;
-                if (val != null) dict[key] = val;
-            }
-
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var f in fields)
-            {
-                var name = f.Name;
-                if (string.IsNullOrEmpty(name)) continue;
-                var parts = name.Split('_');
-                if (parts.Length != 2) continue;
-                var suffix = parts[1];
-                if (suffix.Length != 2) continue;
-                if (!char.IsDigit(suffix[0]) || !char.IsDigit(suffix[1])) continue;
-                var key = parts[0] + "-" + suffix;
-                var val = f.GetValue(this) as ConfigItem;
-                if (val != null) dict[key] = val;
-            }
-            return dict;
+            // Generated implementation will replace reflection. The source generator
+            // creates BuildAliasDictionary_Generated(VFDConfiguration) at compile time.
+            return BuildAliasDictionary_Generated(this);
         }
 
         /// <summary>
@@ -61,7 +29,7 @@ namespace LibSciyonVFD
         /// </summary>
         public void Serialize(string path)
         {
-            var groups = new Dictionary<string, List<KeyValuePair<string, object>>>();
+            var groups = new Dictionary<string, List<KeyValuePair<string, ConfigItem>>>();
             foreach (var kv in ByCode)
             {
                 var parts = kv.Key.Split('-');
@@ -70,10 +38,10 @@ namespace LibSciyonVFD
                 var key = parts[1];
                 if (!groups.TryGetValue(section, out var list))
                 {
-                    list = new List<KeyValuePair<string, object>>();
+                    list = new List<KeyValuePair<string, ConfigItem>>();
                     groups[section] = list;
                 }
-                list.Add(new KeyValuePair<string, object>(key, kv.Value));
+                list.Add(new KeyValuePair<string, ConfigItem>(key, kv.Value));
             }
 
             var sb = new StringBuilder();
@@ -82,15 +50,7 @@ namespace LibSciyonVFD
                 sb.AppendLine("[" + g.Key + "]");
                 foreach (var kv in g.Value.OrderBy(i => i.Key))
                 {
-                    var item = kv.Value;
-                    var fi = item.GetType().GetField("Value");
-                    object val = fi?.GetValue(item);
-                    string sval;
-                    if (val == null) sval = string.Empty;
-                    else if (val is float f) sval = f.ToString(CultureInfo.InvariantCulture);
-                    else if (val is double d) sval = d.ToString(CultureInfo.InvariantCulture);
-                    else sval = Convert.ToString(val, CultureInfo.InvariantCulture);
-                    sb.AppendLine(kv.Key + "=" + sval);
+                    sb.AppendLine(kv.Key + "=" + kv.Value.RawValue);
                 }
                 sb.AppendLine();
             }
@@ -122,21 +82,7 @@ namespace LibSciyonVFD
                 var valstr = line.Substring(idx + 1).Trim();
                 var fullKey = currentSection + "-" + key;
                 if (!ByCode.TryGetValue(fullKey, out var item)) continue;
-                var fi = item.GetType().GetField("Value");
-                if (fi == null) continue;
-                var targetType = fi.FieldType;
-                try
-                {
-                    object parsed;
-                    if (targetType == typeof(float)) parsed = float.Parse(valstr, CultureInfo.InvariantCulture);
-                    else if (targetType == typeof(double)) parsed = double.Parse(valstr, CultureInfo.InvariantCulture);
-                    else parsed = Convert.ChangeType(valstr, targetType, CultureInfo.InvariantCulture);
-                    fi.SetValue(item, parsed);
-                }
-                catch
-                {
-                    // 忽略解析/设置错误
-                }
+                item.RawValue = ushort.Parse(valstr, CultureInfo.InvariantCulture);
             }
         }
 
