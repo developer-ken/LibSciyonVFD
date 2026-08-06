@@ -52,14 +52,6 @@ namespace LibSciyonVFD
         };
 
 
-        public static ErrorInfo[] ErrorInfos = new ErrorInfo[]
-        {
-            new ErrorInfo{ Code = ErrorCode.Void, Message = "No error", Description = "No error", Suggestion = "No action needed" },
-            new ErrorInfo{ Code = ErrorCode.EuU, Message = "母线欠压", Description = "内部直流母线电压过低", Suggestion = "检查输入电压是否正常。如果无法自行解决，请联系技术支持。" },
-            // Add more error codes as needed
-        };
-
-
         private ModbusRTUMaster modbus;
 
         public struct VFDStatus
