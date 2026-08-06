@@ -16,6 +16,40 @@ namespace LibSciyonVFD
         public int MaxRetriesForSingleAccess = 2;
 
 
+        public static ErrorInfo[] ErrorInfos = new ErrorInfo[]
+        {
+            new ErrorInfo{ Code = ErrorCode.Void, Message = "No error", Description = "No error", Suggestion = "No action needed" },
+            new ErrorInfo{ Code = ErrorCode.EuU, Message = "母线欠压", Description = "内部直流母线电压过低", Suggestion = "检查输入电压是否正常。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EoC1, Message = "加速过流", Description = "启动或加速时输出电流过大", Suggestion = "检查电机是否短路，功率是否合适。对于惯性负载，增大加速时间设定。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EoC2, Message = "恒速过流", Description = "平稳运行中输出电流突然过大", Suggestion = "检查电机是否短路，功率是否合适，电网电压是否存在波动。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EoC3, Message = "减速过流", Description = "减速时输出电流过大", Suggestion = "检查电机是否短路，功率是否合适，电网电压是否存在波动。对于惯性负载，增大减速时间设定。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EoU1, Message = "加速过压", Description = "加速过程中母线电压异常上升", Suggestion = "检查电机接线是否正确，电网是否过压。考虑使用能耗制动。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EoU2, Message = "恒速过压", Description = "平稳运行中母线电压异常上升", Suggestion = "检查负载是否剧烈波动，电网是否过压，参数设置是否正确。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EoU3, Message = "减速过压", Description = "减速过程中母线电压异常上升", Suggestion = "检查负载是否剧烈波动，电网是否过压，参数设置是否正确。考虑使用能耗制动。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EoL1, Message = "变频过载", Description = "变频器输出功率超限", Suggestion = "检查负载是否过大，电机功率是否合适。对于惯性负载，增大加速时间设定。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EoL2, Message = "电机过载", Description = "电机功率超限", Suggestion = "检查电机参数设置是否正确，负载是否过大。非变频电机不建议重载低速运行。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EoH1, Message = "变频过热", Description = "变频器内部温度过高", Suggestion = "检查环境温度是否过高，散热条件是否良好。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EoH2, Message = "电机过热", Description = "电机温度过高", Suggestion = "检查电机是否过载，环境温度是否过高，过温阈值设置是否合适。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EoPL, Message = "输出缺相", Description = "输出相位不完整", Suggestion = "检查电机接线是否正确，电机是否损坏。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EIPL, Message = "输入缺相", Description = "输入相位不完整", Suggestion = "检查电源接线是否正确，用万用表测量三相电压是否平衡。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EFAL, Message = "模块故障", Description = "变频器功率模块上报了致命错误", Suggestion = "检查输出是否短路。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EruU, Message = "运行欠压", Description = "运行中内部直流母线电压过低", Suggestion = "检查输入电压是否正常，上电时是否听到内部接触器动作声。如果无法自行解决，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EPdn, Message = "对地异常", Description = "输出接线似乎在对地漏电", Suggestion = "检查电机、输出线是否绝缘损坏。尝试脱开输出线，若仍然报错，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.ECtC, Message = "检流异常", Description = "内部电流传感器异常", Suggestion = "内部硬件异常，请联系技术支持。" },
+            new ErrorInfo{ Code = ErrorCode.EtUN, Message = "辨识失败", Description = "无法完成自动电机参数测量", Suggestion = "确保电机接线正确、不在旋转，检查电机参数设置。" },
+            new ErrorInfo{ Code = ErrorCode.Eto1, Message = "厂商锁定", Description = "代理商运行时间到", Suggestion = "联系代理商处理" },
+            new ErrorInfo{ Code = ErrorCode.Eto2, Message = "厂商锁定", Description = "定时运行时间到", Suggestion = "联系技术支持" },
+            new ErrorInfo{ Code = ErrorCode.Eto3, Message = "厂商锁定", Description = "累计运行时间到", Suggestion = "联系技术支持" },
+            new ErrorInfo{ Code = ErrorCode.ESFt, Message = "软件故障", Description = "软件版本不匹配", Suggestion = "联系技术支持" },
+            new ErrorInfo{ Code = ErrorCode.EPEr, Message = "外部故障", Description = "外部故障输入有效", Suggestion = "检查外部故障输入信号状态" },
+            new ErrorInfo{ Code = ErrorCode.EFbH, Message = "反馈超限", Description = "PID反馈信号超限", Suggestion = "检查反馈信号接线是否正确，反馈信号是否正常，PID参数是否正常" },
+            new ErrorInfo{ Code = ErrorCode.EFbL, Message = "反馈丢失", Description = "PID反馈信号丢失", Suggestion = "检查反馈信号接线是否正确，反馈信号是否正常" },
+            new ErrorInfo{ Code = ErrorCode.EAiH, Message = "模拟超限", Description = "模拟量输入信号超限", Suggestion = "检查模拟量输入信号接线是否正确，模拟量输入信号是否正常" },
+            new ErrorInfo{ Code = ErrorCode.EAiL, Message = "模拟丢失", Description = "模拟量输入信号丢失", Suggestion = "联系技术支持" },
+            new ErrorInfo{ Code = ErrorCode.EcEr, Message = "存储异常", Description = "内部存储器异常", Suggestion = "联系技术支持" },
+            new ErrorInfo{ Code = ErrorCode.EcTo, Message = "通讯超时", Description = "外部通信可能存在异常", Suggestion = "检查通讯线路是否正常，通讯参数是否正确。如果无法自行解决，请联系技术支持。" }
+            // Add more error codes as needed
+        };
 
 
         public static ErrorInfo[] ErrorInfos = new ErrorInfo[]
@@ -405,7 +439,7 @@ namespace LibSciyonVFD
         public VFDStatusParams ReadDetailStatus()
         {
             VFDStatusParams status = new VFDStatusParams();
-            var data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 22);
+            var data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 16);
             status.Status = (Status)data[0];
             status.ErrorCode = data[1];
             status.TargetFrequency = data[2] / 100.0f;
@@ -422,12 +456,13 @@ namespace LibSciyonVFD
             status.RemoteAI2 = data[13] / 100.0f;
             status.RemotePFInput = data[14] / 100.0f;
             status.RemoteDI = data[15];
-            status.RemoteDO = data[16];
-            status.PIDGoal = data[17] / 1000.0f;
-            status.PIDFeedback = data[18] / 1000.0f;
-            status.AgingTimeHours = data[19];
-            status.AgingTimeMinutes = data[20];
-            status.LoadPercentage = data[21] / 1000.0f;
+            data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 6);
+            status.RemoteDO = data[0];
+            status.PIDGoal = data[1] / 1000.0f;
+            status.PIDFeedback = data[2] / 1000.0f;
+            status.AgingTimeHours = data[3];
+            status.AgingTimeMinutes = data[4];
+            status.LoadPercentage = data[5] / 1000.0f;
             return status;
         }
 
