@@ -51,6 +51,15 @@ namespace LibSciyonVFD
             // Add more error codes as needed
         };
 
+
+        public static ErrorInfo[] ErrorInfos = new ErrorInfo[]
+        {
+            new ErrorInfo{ Code = ErrorCode.Void, Message = "No error", Description = "No error", Suggestion = "No action needed" },
+            new ErrorInfo{ Code = ErrorCode.EuU, Message = "母线欠压", Description = "内部直流母线电压过低", Suggestion = "检查输入电压是否正常。如果无法自行解决，请联系技术支持。" },
+            // Add more error codes as needed
+        };
+
+
         private ModbusRTUMaster modbus;
 
         public struct VFDStatus
@@ -58,6 +67,40 @@ namespace LibSciyonVFD
             public Status Status { internal set; get; }
             public float Current { internal set; get; }
             public float RailVotage { internal set; get; }
+            public float LoadPercentage { internal set; get; }
+        }
+
+        public struct ErrorInfo
+        {
+            public ErrorCode Code { internal set; get; }
+            public string Message { internal set; get; }
+            public string Description { internal set; get; }
+            public string Suggestion { internal set; get; }
+        }
+
+        public struct VFDStatusParams
+        {
+            public Status Status { internal set; get; }
+            public ushort ErrorCode { internal set; get; }
+            public float TargetFrequency { internal set; get; }
+            public float RunningFrequency { internal set; get; }
+            public ushort RailVotage { internal set; get; }
+            public ushort OutputVoltage { internal set; get; }
+            public float OutputCurrent { internal set; get; }
+            public float OutputPower { internal set; get; }
+            public float OutputFrequency { internal set; get; }
+            public float OutputTorque { internal set; get; }
+            public float MoudleTemerature { internal set; get; }
+            public ushort MotorRotatingSpeed { internal set; get; }
+            public float RemoteAI1 { internal set; get; }
+            public float RemoteAI2 { internal set; get; }
+            public float RemotePFInput { internal set; get; }
+            public ushort RemoteDI { internal set; get; }
+            public ushort RemoteDO { internal set; get; }
+            public float PIDGoal { internal set; get; }
+            public float PIDFeedback { internal set; get; }
+            public ushort AgingTimeHours { internal set; get; }
+            public ushort AgingTimeMinutes { internal set; get; }
             public float LoadPercentage { internal set; get; }
         }
 
@@ -83,7 +126,7 @@ namespace LibSciyonVFD
             MaximumVelocityInTorqueMode = 0x7007,
             MultiSpeedFrequency0 = 0x7008,
             MultiSpeedFrequency1 = 0x7009,
-            PIDScale = 0x700A,
+            PIDGoal = 0x700A,
             PIDFeedback = 0x700B,
             VirtualDI = 0x700C,
             RemoteDO = 0x700D,
@@ -121,6 +164,40 @@ namespace LibSciyonVFD
             LoadPercentage = 0x7115,
             _RailVoltage = 0x7116,
             _ReflectedStatusWord = 0x7117,
+        }
+
+        public enum ErrorCode
+        {
+            Void = 0,
+            EuU = 1,
+            EoC1 = 2,
+            EoC2 = 3,
+            EoC3 = 4,
+            EoU1 = 5,
+            EoU2 = 6,
+            EoU3 = 7,
+            EoL1 = 8,
+            EoL2 = 9,
+            EoH1 = 10,
+            EoH2 = 11,
+            EoPL = 12,
+            EIPL = 13,
+            EFAL = 14,
+            EruU = 15,
+            EPdn = 16,
+            ECtC = 17,
+            EtUN = 18,
+            Eto1 = 19,
+            Eto2 = 20,
+            Eto3 = 21,
+            ESFt = 22,
+            EPEr = 23,
+            EFbH = 24,
+            EFbL = 25,
+            EAiH = 26,
+            EAiL = 27,
+            EcEr = 28,
+            EcTo = 29
         }
 
         public enum Command
@@ -165,7 +242,7 @@ namespace LibSciyonVFD
             {
                 try
                 {
-                    if ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 5)
+                    if ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 16)
                     {
                         ItemsInGroup.Add(item);
                         continue;
@@ -187,16 +264,22 @@ namespace LibSciyonVFD
                             ItemsInGroup.Add(item);
                             continue;
                         }
+                        catch (InvalidOperationException ex)
+                        {
+                            // Modbus ERRCode, dont retry here
+                            Console.WriteLine(ex.Message);
+                            throw;
+                        }
                         catch (Exception ex)
                         {
-                            if (retries > MaxRetriesForSingleAccess)
+                            if (retries >= MaxRetriesForSingleAccess)
                             {
-                                Console.WriteLine(ex.ToString());
+                                Console.WriteLine(ex.Message);
                                 Console.WriteLine($"ERROR: Communication failed with max retries({MaxRetriesForSingleAccess}).");
                                 throw;
                             }
                             retries++;
-                            Console.WriteLine(ex.ToString());
+                            Console.WriteLine(ex.Message);
                             Console.WriteLine($"Retry(s) {retries}/{MaxRetriesForSingleAccess}");
                             goto _RETRY;
                         }
@@ -214,43 +297,61 @@ namespace LibSciyonVFD
         public void WriteConfigAll()
         {
             List<ConfigItem> ItemsInGroup = new List<ConfigItem>();
+            bool isRunning = Probe() >= Status.Idle;
             foreach (var item in Config.ByCode.Values)
             {
-                if (ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain)
+            _BEGINPROCESS:
+                try
                 {
-                    ItemsInGroup.Add(item);
-                    continue;
-                }
-                else
-                {
-                    ushort[] collected = new ushort[ItemsInGroup.Count];
-                    for (int i = 0; i < ItemsInGroup.Count; i++)
+                    if ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 16)
                     {
-                        collected[i] = ItemsInGroup[i].RawValue;
+                        if (item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning)) continue;
+                        ItemsInGroup.Add(item);
+                        continue;
                     }
-                    int retries = 0;
-                _RETRY:
-                    try
+                    else
                     {
-                        Console.WriteLine($"*COM* WriteMultipleRegisters({Addr},0x{ItemsInGroup.First().Index.CodeAddr.ToString("X4")})");
-                        modbus.WriteMultipleRegisters(Addr, ItemsInGroup.First().Index.CodeAddr, collected);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (retries > MaxRetriesForSingleAccess)
+                        ushort[] collected = new ushort[ItemsInGroup.Count];
+                        for (int i = 0; i < ItemsInGroup.Count; i++)
                         {
-                            Console.WriteLine(ex.ToString());
-                            Console.WriteLine($"ERROR: Communication failed with max retries({MaxRetriesForSingleAccess}).");
+                            collected[i] = ItemsInGroup[i].RawValue;
+                            ItemsInGroup[i].Modified = false;
+                        }
+                        int retries = 0;
+                    _RETRY:
+                        try
+                        {
+                            Console.WriteLine($"*COM* WriteMultipleRegisters({Addr},0x{ItemsInGroup.First().Index.CodeAddr.ToString("X4")})");
+                            modbus.WriteMultipleRegisters(Addr, ItemsInGroup.First().Index.CodeAddr, collected);
+                        }
+                        catch (InvalidOperationException ex)
+                        {
+                            // Modbus ERRCode, dont retry here
+                            Console.WriteLine(ex.Message);
                             throw;
                         }
-                        retries++;
-                        Console.WriteLine(ex.ToString());
-                        Console.WriteLine($"Retry(s) {retries}/{MaxRetriesForSingleAccess}");
-                        goto _RETRY;
+                        catch (Exception ex)
+                        {
+                            if (retries >= MaxRetriesForSingleAccess)
+                            {
+                                Console.WriteLine(ex.Message);
+                                Console.WriteLine($"ERROR: Communication failed with max retries({MaxRetriesForSingleAccess}).");
+                                throw;
+                            }
+                            retries++;
+                            Console.WriteLine(ex.Message);
+                            Console.WriteLine($"Retry(s) {retries}/{MaxRetriesForSingleAccess}");
+                            goto _RETRY;
+                        }
+                        ItemsInGroup.Clear();
+                        goto _BEGINPROCESS;
                     }
+                }
+                catch
+                {
+                    Console.WriteLine($"! Error writing sector {ItemsInGroup.First().Index.CodeDomain}-{ItemsInGroup.First().Index.CodeId}~{ItemsInGroup.Last().Index.CodeId}, skipped.");
                     ItemsInGroup.Clear();
-                    ItemsInGroup.Add(item);
-                    continue;
+                    goto _BEGINPROCESS;
                 }
             }
         }
@@ -258,49 +359,67 @@ namespace LibSciyonVFD
         public void WriteModified()
         {
             List<ConfigItem> ItemsInGroup = new List<ConfigItem>();
+            bool isRunning = Probe() >= Status.Idle;
             foreach (var item in Config.ByCode.Values)
             {
-                if (!item.Modified) continue;
-                if (ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain)
+            _BEGINPROCESS:
+                try
                 {
-                    ItemsInGroup.Add(item);
-                    continue;
-                }
-                else
-                {
-                    ushort[] collected = new ushort[ItemsInGroup.Count];
-                    for (int i = 0; i < ItemsInGroup.Count; i++)
+                    if ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 16)
                     {
-                        collected[i] = ItemsInGroup[i].RawValue;
+                        if (!item.Modified) continue;
+                        if (item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning)) continue;
+                        ItemsInGroup.Add(item);
+                        continue;
                     }
-                    int retries = 0;
-                _RETRY:
-                    try
+                    else
                     {
-                        Console.WriteLine($"*COM* WriteMultipleRegisters({Addr},0x{ItemsInGroup.First().Index.CodeAddr.ToString("X4")})");
-                        modbus.WriteMultipleRegisters(Addr, ItemsInGroup.First().Index.CodeAddr, collected);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (retries > MaxRetriesForSingleAccess)
+                        ushort[] collected = new ushort[ItemsInGroup.Count];
+                        for (int i = 0; i < ItemsInGroup.Count; i++)
                         {
-                            Console.WriteLine(ex.ToString());
-                            Console.WriteLine($"ERROR: Communication failed with max retries({MaxRetriesForSingleAccess}).");
+                            collected[i] = ItemsInGroup[i].RawValue;
+                            ItemsInGroup[i].Modified = false;
+                        }
+                        int retries = 0;
+                    _RETRY:
+                        try
+                        {
+                            Console.WriteLine($"*COM* WriteMultipleRegisters({Addr},0x{ItemsInGroup.First().Index.CodeAddr.ToString("X4")})");
+                            modbus.WriteMultipleRegisters(Addr, ItemsInGroup.First().Index.CodeAddr, collected);
+                        }
+                        catch (InvalidOperationException ex)
+                        {
+                            // Modbus ERRCode, dont retry here
+                            Console.WriteLine(ex.Message);
                             throw;
                         }
-                        retries++;
-                        Console.WriteLine(ex.ToString());
-                        Console.WriteLine($"Retry(s) {retries}/{MaxRetriesForSingleAccess}");
-                        goto _RETRY;
+                        catch (Exception ex)
+                        {
+                            if (retries >= MaxRetriesForSingleAccess)
+                            {
+                                Console.WriteLine(ex.Message);
+                                Console.WriteLine($"ERROR: Communication failed with max retries({MaxRetriesForSingleAccess}).");
+                                throw;
+                            }
+                            retries++;
+                            Console.WriteLine(ex.Message);
+                            Console.WriteLine($"Retry(s) {retries}/{MaxRetriesForSingleAccess}");
+                            goto _RETRY;
+                        }
+                        ItemsInGroup.Clear();
+                        goto _BEGINPROCESS;
                     }
+                }
+                catch
+                {
+                    Console.WriteLine($"! Error writing sector {ItemsInGroup.First().Index.CodeDomain}-{ItemsInGroup.First().Index.CodeId}~{ItemsInGroup.Last().Index.CodeId}, skipped.");
                     ItemsInGroup.Clear();
-                    ItemsInGroup.Add(item);
-                    continue;
+                    goto _BEGINPROCESS;
                 }
             }
         }
 
-        public Status ProbeStatus()
+        public Status Probe()
         {
             var data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 1);
             return (Status)data[0];
