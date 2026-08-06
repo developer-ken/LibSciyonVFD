@@ -20,7 +20,10 @@ namespace LibSciyonVFD
         private Dictionary<string, ConfigItem> BuildAliasDictionary()
         {
             var dict = new Dictionary<string, ConfigItem>();
-            var props = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            // Include both public instance properties and public instance fields.
+            var type = this.GetType();
+
+            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (var p in props)
             {
                 var name = p.Name;
@@ -32,8 +35,23 @@ namespace LibSciyonVFD
                 if (suffix.Length != 2) continue;
                 if (!char.IsDigit(suffix[0]) || !char.IsDigit(suffix[1])) continue;
                 var key = parts[0] + "-" + suffix;
-                var val = (ConfigItem)p.GetValue(this);
-                dict[key] = val;
+                var val = p.GetValue(this) as ConfigItem;
+                if (val != null) dict[key] = val;
+            }
+
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var f in fields)
+            {
+                var name = f.Name;
+                if (string.IsNullOrEmpty(name)) continue;
+                var parts = name.Split('_');
+                if (parts.Length != 2) continue;
+                var suffix = parts[1];
+                if (suffix.Length != 2) continue;
+                if (!char.IsDigit(suffix[0]) || !char.IsDigit(suffix[1])) continue;
+                var key = parts[0] + "-" + suffix;
+                var val = f.GetValue(this) as ConfigItem;
+                if (val != null) dict[key] = val;
             }
             return dict;
         }

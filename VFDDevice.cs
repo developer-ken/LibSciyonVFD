@@ -13,7 +13,9 @@ namespace LibSciyonVFD
         public PortConfig CommConfig { private set; get; }
         public VFDConfiguration Config { private set; get; }
 
-        public int MaxRetriesForSingleAccess = 5;
+        public int MaxRetriesForSingleAccess = 2;
+
+
 
 
         public static ErrorInfo[] ErrorInfos = new ErrorInfo[]
@@ -193,6 +195,10 @@ namespace LibSciyonVFD
             CommConfig = commConfig;
             Config = config;
             modbus = new ModbusRTUMaster(port, baudRate, commConfig, 500);
+            if (Config is null)
+            {
+                Config = new VFDConfiguration();
+            }
         }
 
         public void ReadConfigAll()
@@ -200,41 +206,50 @@ namespace LibSciyonVFD
             List<ConfigItem> ItemsInGroup = new List<ConfigItem>();
             foreach (var item in Config.ByCode.Values)
             {
-                if (ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain)
+                try
                 {
-                    ItemsInGroup.Add(item);
-                    continue;
-                }
-                else
-                {
-                    int retries = 0;
-                _RETRY:
-                    try
+                    if ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 5)
                     {
-                        Console.WriteLine($"*COM* ReadHoldingRegisters({Addr},0x{ItemsInGroup.First().Index.CodeAddr.ToString("X4")})");
-                        var readdata = modbus.ReadHoldingRegisters(Addr, ItemsInGroup.First().Index.CodeAddr, (ushort)ItemsInGroup.Count);
-                        for (int i = 0; i < ItemsInGroup.Count; i++)
-                        {
-                            ItemsInGroup[i].RawValue = readdata[i];
-                            ItemsInGroup[i].Modified = false;
-                        }
-                        ItemsInGroup.Clear();
                         ItemsInGroup.Add(item);
                         continue;
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        if (retries > MaxRetriesForSingleAccess)
+                        int retries = 0;
+                    _RETRY:
+                        try
                         {
-                            Console.WriteLine(ex.ToString());
-                            Console.WriteLine($"ERROR: Communication failed with max retries({MaxRetriesForSingleAccess}).");
-                            throw;
+                            Console.WriteLine($"*COM* ReadHoldingRegisters({Addr},0x{ItemsInGroup.First().Index.CodeAddr.ToString("X4")},{ItemsInGroup.Count})");
+                            var readdata = modbus.ReadHoldingRegisters(Addr, ItemsInGroup.First().Index.CodeAddr, (ushort)ItemsInGroup.Count);
+                            for (int i = 0; i < ItemsInGroup.Count; i++)
+                            {
+                                ItemsInGroup[i].RawValue = readdata[i];
+                                ItemsInGroup[i].Modified = false;
+                            }
+                            ItemsInGroup.Clear();
+                            ItemsInGroup.Add(item);
+                            continue;
                         }
-                        retries++;
-                        Console.WriteLine(ex.ToString());
-                        Console.WriteLine($"Retry(s) {retries}/{MaxRetriesForSingleAccess}");
-                        goto _RETRY;
+                        catch (Exception ex)
+                        {
+                            if (retries > MaxRetriesForSingleAccess)
+                            {
+                                Console.WriteLine(ex.ToString());
+                                Console.WriteLine($"ERROR: Communication failed with max retries({MaxRetriesForSingleAccess}).");
+                                throw;
+                            }
+                            retries++;
+                            Console.WriteLine(ex.ToString());
+                            Console.WriteLine($"Retry(s) {retries}/{MaxRetriesForSingleAccess}");
+                            goto _RETRY;
+                        }
                     }
+                }
+                catch
+                {
+                    Console.WriteLine($"! Error reading sector {ItemsInGroup.First().Index.CodeDomain}-{ItemsInGroup.First().Index.CodeId}~{ItemsInGroup.Last().Index.CodeId}, skipped.");
+                    ItemsInGroup.Clear();
+                    ItemsInGroup.Add(item);
                 }
             }
         }
