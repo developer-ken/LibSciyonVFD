@@ -58,6 +58,7 @@ namespace LibSciyonVFD
             HasDefaultValue = false;
             IsReadonly = readonly_;
             Shift = shift;
+            Modified = false;
         }
 
         public ConfigItem(ushort value, ConfigIndex index, string discription, ushort defaultvalue, ReadOnly readonly_ = ReadOnly.Never, int shift = 1)
@@ -70,6 +71,7 @@ namespace LibSciyonVFD
             HasDefaultValue = true;
             IsReadonly = readonly_;
             Shift = shift;
+            Modified = false;
         }
 
         public ConfigItem(float value, ConfigIndex index, string discription, ReadOnly readonly_ = ReadOnly.Never, int shift = 1)

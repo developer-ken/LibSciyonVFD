@@ -109,10 +109,10 @@ namespace LibSciyonVFD
 
             var resp = SendAndReceive(req);
             // resp: addr, func, byteCount, data..., crcLo, crcHi
-            if (resp.Length < 5) throw new InvalidOperationException("Invalid response length");
+            if (resp.Length < 5) throw new InvalidDataException("Invalid response length");
             if (resp[1] == (0x80 | 0x03)) throw new InvalidOperationException($"Modbus exception code: {resp[2]}");
             int byteCount = resp[2];
-            if (resp.Length != 3 + byteCount + 2) throw new InvalidOperationException("Unexpected response size");
+            if (resp.Length != 3 + byteCount + 2) throw new InvalidDataException("Unexpected response size");
             var result = new ushort[byteCount / 2];
             for (int i = 0; i < result.Length; i++)
             {
@@ -134,10 +134,10 @@ namespace LibSciyonVFD
 
             var resp = SendAndReceive(req);
             // expect echo of request (except possibly CRC order)
-            if (resp.Length < 8) throw new InvalidOperationException("Invalid response length");
+            if (resp.Length < 8) throw new InvalidDataException("Invalid response length");
             if (resp[1] == (0x80 | 0x06)) throw new InvalidOperationException($"Modbus exception code: {resp[2]}");
             // validate address and value echoed
-            if (resp[0] != slaveAddress || resp[1] != 0x06) throw new InvalidOperationException("Unexpected response header");
+            if (resp[0] != slaveAddress || resp[1] != 0x06) throw new InvalidDataException("Unexpected response header");
         }
 
         public void WriteMultipleRegisters(byte slaveAddress, ushort startAddress, ushort[] values)
@@ -161,7 +161,7 @@ namespace LibSciyonVFD
 
             var resp = SendAndReceive(req);
             // expect addr, func, startAddrHi, startAddrLo, qtyHi, qtyLo, crcLo, crcHi
-            if (resp.Length < 8) throw new InvalidOperationException("Invalid response length");
+            if (resp.Length < 5) throw new InvalidDataException("Invalid response length");
             if (resp[1] == (0x80 | 0x10)) throw new InvalidOperationException($"Modbus exception code: {resp[2]}");
         }
 
@@ -193,10 +193,10 @@ namespace LibSciyonVFD
             var req = AppendCrc(request.ToArray());
 
             var resp = SendAndReceive(req);
-            if (resp.Length < 5) throw new InvalidOperationException("Invalid response length");
+            if (resp.Length < 5) throw new InvalidDataException("Invalid response length");
             if (resp[1] == (0x80 | 0x17)) throw new InvalidOperationException($"Modbus exception code: {resp[2]}");
             int byteCount = resp[2];
-            if (resp.Length != 3 + byteCount + 2) throw new InvalidOperationException("Unexpected response size");
+            if (resp.Length != 3 + byteCount + 2) throw new InvalidDataException("Unexpected response size");
             var result = new ushort[byteCount / 2];
             for (int i = 0; i < result.Length; i++)
             {
@@ -272,7 +272,7 @@ namespace LibSciyonVFD
                         {
                             // validate CRC
                             var arr = received.ToArray();
-                            if (!ValidateCrc(arr)) throw new InvalidOperationException("CRC error in response");
+                            if (!ValidateCrc(arr)) throw new InvalidDataException("CRC error in response");
                             return arr;
                         }
                     }

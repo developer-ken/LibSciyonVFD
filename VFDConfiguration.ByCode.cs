@@ -350,6 +350,23 @@ namespace LibSciyonVFD
 		public ConfigItem PF_09 => MotorOverTempWarnAction;
 		public ConfigItem PF_10 => TorqueProtectUpper;
 		public ConfigItem PF_11 => TorqueUpperDetectTime;
+		public ConfigItem PF_12 => TorqueProtectLower;
+		public ConfigItem PF_13 => TorqueLowerDetectTime;
+		public ConfigItem PF_14 => TorqueProtectAction;
+		public ConfigItem PF_15 => ModuleOverTempTrip;
+		public ConfigItem PF_16 => ModuleOverTempWarnValue;
+		public ConfigItem PF_17 => TempSensorFailValue;
+		public ConfigItem PF_18 => ModuleOverTempDetectTime;
+		public ConfigItem PF_19 => ModuleOverTempWarnAction;
+		public ConfigItem PF_20 => FanWorkMode;
+		public ConfigItem PF_21 => FanStartTemp;
+		public ConfigItem PF_22 => FanStopDelay;
+		public ConfigItem PF_23 => InputPhaseLossProtect;
+		public ConfigItem PF_24 => OutputPhaseLossProtect;
+		public ConfigItem PF_25 => GroundShortProtect;
+		public ConfigItem PF_26 => FaultAutoResetCount;
+		public ConfigItem PF_27 => FaultAutoResetInterval;
+		public ConfigItem PF_28 => FaultAutoResetConfig;
 		#endregion
 		#region A0组 别名
 		public ConfigItem A0_00 => PowerOnTerminalProtect;
