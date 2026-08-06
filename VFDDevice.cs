@@ -292,17 +292,23 @@ namespace LibSciyonVFD
             bool isRunning = Probe() >= Status.Idle;
             foreach (var item in Config.ByCode.Values)
             {
+                bool skipped_by_code = false;
             _BEGINPROCESS:
+                if (skipped_by_code) continue;
                 try
                 {
-                    if ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 16)
+                    skipped_by_code = item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning);
+                    if (
+                        ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 16)
+                        && !skipped_by_code
+                        )
                     {
-                        if (item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning)) continue;
                         ItemsInGroup.Add(item);
                         continue;
                     }
                     else
                     {
+                        if (ItemsInGroup.Count == 0) continue;
                         ushort[] collected = new ushort[ItemsInGroup.Count];
                         for (int i = 0; i < ItemsInGroup.Count; i++)
                         {
@@ -354,18 +360,23 @@ namespace LibSciyonVFD
             bool isRunning = Probe() >= Status.Idle;
             foreach (var item in Config.ByCode.Values)
             {
+                bool skipped_by_code = false;
             _BEGINPROCESS:
+                if (skipped_by_code) continue;
                 try
                 {
-                    if ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 16)
+                    skipped_by_code = ((!item.Modified) || (item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning)));
+                    if (
+                        ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 16)
+                        && !skipped_by_code
+                        )
                     {
-                        if (!item.Modified) continue;
-                        if (item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning)) continue;
                         ItemsInGroup.Add(item);
                         continue;
                     }
                     else
                     {
+                        if (ItemsInGroup.Count == 0) continue;
                         ushort[] collected = new ushort[ItemsInGroup.Count];
                         for (int i = 0; i < ItemsInGroup.Count; i++)
                         {
