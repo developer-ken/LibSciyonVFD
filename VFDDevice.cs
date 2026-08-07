@@ -7,7 +7,6 @@ namespace LibSciyonVFD
 {
     public class VFDDevice
     {
-        private SerialPort port;
         public byte Addr { private set; get; }
         public int BaudRate { private set; get; }
         public PortConfig CommConfig { private set; get; }
@@ -16,7 +15,7 @@ namespace LibSciyonVFD
         public int MaxRetriesForSingleAccess = 2;
 
 
-        public static ErrorInfo[] ErrorInfos = new ErrorInfo[]
+        public static ErrorInfo[] ErrorInfos { private set; get; } = new ErrorInfo[]
         {
             new ErrorInfo{ Code = ErrorCode.Void, Message = "No error", Description = "No error", Suggestion = "No action needed" },
             new ErrorInfo{ Code = ErrorCode.EuU, Message = "母线欠压", Description = "内部直流母线电压过低", Suggestion = "检查输入电压是否正常。如果无法自行解决，请联系技术支持。" },
@@ -57,9 +56,7 @@ namespace LibSciyonVFD
         public struct VFDStatus
         {
             public Status Status { internal set; get; }
-            public float Current { internal set; get; }
-            public float RailVotage { internal set; get; }
-            public float LoadPercentage { internal set; get; }
+            public ErrorCode ErrorCode { internal set; get; }
         }
 
         public struct ErrorInfo
@@ -207,20 +204,28 @@ namespace LibSciyonVFD
         public enum Status
         {
             Void = 0,
-            RunningForward = 0b0001 << 4,
-            RunningReverse = 0b0010 << 4,
-            Idle = 0b0011 << 4,
-            Error = 0b0100 << 4
+            RunningForward = 0b0001,
+            RunningReverse = 0b0010,
+            Idle = 0b0011,
+            Error = 0b0100
         }
 
         public VFDDevice(SerialPort port, byte addr, int baudRate, PortConfig commConfig, VFDConfiguration config = null)
         {
-            this.port = port;
             Addr = addr;
-            BaudRate = baudRate;
-            CommConfig = commConfig;
             Config = config;
             modbus = new ModbusRTUMaster(port, baudRate, commConfig, 500);
+            if (Config is null)
+            {
+                Config = new VFDConfiguration();
+            }
+        }
+
+        public VFDDevice(ModbusRTUMaster modbus, byte addr, VFDConfiguration config = null)
+        {
+            Addr = addr;
+            Config = config;
+            this.modbus = modbus;
             if (Config is null)
             {
                 Config = new VFDConfiguration();
@@ -422,20 +427,29 @@ namespace LibSciyonVFD
             }
         }
 
+        public bool CanWrite(ConfigItem item)
+        {
+            var st = Probe();
+            bool isRunning = st == Status.RunningForward || st == Status.RunningReverse;
+            return !(item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning));
+        }
+
         public Status Probe()
         {
-            var data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 1);
-            return (Status)data[0];
+            return Probe(modbus, Addr);
         }
 
         public VFDStatus BriefStatus()
         {
+            return BriefStatus(modbus, Addr);
+        }
+
+        public static VFDStatus BriefStatus(ModbusRTUMaster modbus, byte Addr)
+        {
             VFDStatus status = new VFDStatus();
-            var data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 6);
+            var data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 2);
             status.Status = (Status)data[0];
-            status.RailVotage = data[1] / 10.0f;
-            status.Current = data[2] / 10.0f;
-            status.LoadPercentage = data[5] / 10.0f;
+            status.ErrorCode = (ErrorCode)data[1];
             return status;
         }
 
