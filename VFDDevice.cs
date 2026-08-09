@@ -9,11 +9,13 @@ namespace LibSciyonVFD
     public class VFDDevice
     {
         public byte Addr { private set; get; }
-        public int BaudRate { private set; get; }
-        public PortConfig CommConfig { private set; get; }
         public VFDConfiguration Config { private set; get; }
 
         public int MaxRetriesForSingleAccess = 5;
+
+        public bool IsViaRJ45 => Addr == 1 && modbus.BaudRate == 38400 && modbus.CommConfig == PortConfig.R181N;
+
+        private ModbusRTUMaster modbus;
 
 
         public static ErrorInfo[] ErrorInfos { private set; get; } = new ErrorInfo[]
@@ -50,9 +52,6 @@ namespace LibSciyonVFD
             new ErrorInfo{ Code = ErrorCode.EcTo, Message = "通讯超时", Description = "外部通信可能存在异常", Suggestion = "检查通讯线路是否正常，通讯参数是否正确。如果无法自行解决，请联系技术支持。" }
             // Add more error codes as needed
         };
-
-
-        private ModbusRTUMaster modbus;
 
         public struct VFDStatus
         {
@@ -320,6 +319,11 @@ namespace LibSciyonVFD
                 try
                 {
                     skipped_by_code = item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning);
+                    if(item.Index.CodeDomain == "PC" && !IsViaRJ45)
+                    {
+                        skipped_by_code = true;
+                        Console.WriteLine("! Refuse writing to PC-** when not accessing from RJ45 !");
+                    }
                     if (
                         ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 16)
                         && !skipped_by_code
@@ -393,6 +397,11 @@ namespace LibSciyonVFD
                 try
                 {
                     skipped_by_code = ((!item.Modified) || (item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning)));
+                    if (item.Index.CodeDomain == "PC" && !IsViaRJ45)
+                    {
+                        skipped_by_code = true;
+                        Console.WriteLine("! Refuse writing to PC-** when not accessing from RJ45 !");
+                    }
                     if (
                         ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 16)
                         && !skipped_by_code

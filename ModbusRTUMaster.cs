@@ -13,8 +13,8 @@ namespace LibSciyonVFD
         private readonly SerialPort _port;
         private readonly ISerialPort _customPort;
         public int ResponseTimeoutMs;
-        private int BaudRate;
-        private PortConfig CommConfig;
+        public int BaudRate;
+        public PortConfig CommConfig;
 
         public ModbusRTUMaster(SerialPort port, int baudRate, PortConfig commConfig, int responseTimeoutMs = 1000)
         {
