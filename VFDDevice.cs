@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
+using LibSciyonVFD.Serial;
 
 namespace LibSciyonVFD
 {
@@ -12,7 +13,7 @@ namespace LibSciyonVFD
         public PortConfig CommConfig { private set; get; }
         public VFDConfiguration Config { private set; get; }
 
-        public int MaxRetriesForSingleAccess = 2;
+        public int MaxRetriesForSingleAccess = 5;
 
 
         public static ErrorInfo[] ErrorInfos { private set; get; } = new ErrorInfo[]
@@ -221,6 +222,18 @@ namespace LibSciyonVFD
             }
         }
 
+        // Cross-platform constructor using ISerialPort
+        public VFDDevice(ISerialPort port, byte addr, int baudRate, PortConfig commConfig, VFDConfiguration config = null)
+        {
+            Addr = addr;
+            Config = config;
+            modbus = new ModbusRTUMaster(port, baudRate, commConfig, 500);
+            if (Config is null)
+            {
+                Config = new VFDConfiguration();
+            }
+        }
+
         public VFDDevice(ModbusRTUMaster modbus, byte addr, VFDConfiguration config = null)
         {
             Addr = addr;
@@ -281,6 +294,10 @@ namespace LibSciyonVFD
                             goto _RETRY;
                         }
                     }
+                }
+                catch (TimeoutException)
+                {
+                    throw;
                 }
                 catch
                 {
@@ -350,6 +367,10 @@ namespace LibSciyonVFD
                         goto _BEGINPROCESS;
                     }
                 }
+                catch (TimeoutException)
+                {
+                    throw;
+                }
                 catch
                 {
                     Console.WriteLine($"! Error writing sector {ItemsInGroup.First().Index.CodeDomain}-{ItemsInGroup.First().Index.CodeId}~{ItemsInGroup.Last().Index.CodeId}, skipped.");
@@ -359,8 +380,9 @@ namespace LibSciyonVFD
             }
         }
 
-        public void WriteModified()
+        public int WriteModified()
         {
+            int success = 0;
             List<ConfigItem> ItemsInGroup = new List<ConfigItem>();
             bool isRunning = Probe() >= Status.Idle;
             foreach (var item in Config.ByCode.Values)
@@ -394,6 +416,7 @@ namespace LibSciyonVFD
                         {
                             Console.WriteLine($"*COM* WriteMultipleRegisters({Addr},0x{ItemsInGroup.First().Index.CodeAddr.ToString("X4")})");
                             modbus.WriteMultipleRegisters(Addr, ItemsInGroup.First().Index.CodeAddr, collected);
+                            success += collected.Length;
                         }
                         catch (InvalidOperationException ex)
                         {
@@ -418,6 +441,10 @@ namespace LibSciyonVFD
                         goto _BEGINPROCESS;
                     }
                 }
+                catch (TimeoutException)
+                {
+                    throw;
+                }
                 catch
                 {
                     Console.WriteLine($"! Error writing sector {ItemsInGroup.First().Index.CodeDomain}-{ItemsInGroup.First().Index.CodeId}~{ItemsInGroup.Last().Index.CodeId}, skipped.");
@@ -425,6 +452,7 @@ namespace LibSciyonVFD
                     goto _BEGINPROCESS;
                 }
             }
+            return success;
         }
 
         public bool CanWrite(ConfigItem item)
@@ -454,6 +482,11 @@ namespace LibSciyonVFD
         }
 
         public VFDStatusParams ReadDetailStatus()
+        {
+            return ReadDetailStatus(modbus, Addr);
+        }
+
+        public static VFDStatusParams ReadDetailStatus(ModbusRTUMaster modbus, byte Addr)
         {
             VFDStatusParams status = new VFDStatusParams();
             var data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 16);
@@ -563,6 +596,12 @@ namespace LibSciyonVFD
         }
 
         public static Status Probe(SerialPort port, byte addr, int baudRate, PortConfig commConfig)
+        {
+            ModbusRTUMaster modbus = new ModbusRTUMaster(port, baudRate, commConfig, 500);
+            return Probe(modbus, addr);
+        }
+
+        public static Status Probe(ISerialPort port, byte addr, int baudRate, PortConfig commConfig)
         {
             ModbusRTUMaster modbus = new ModbusRTUMaster(port, baudRate, commConfig, 500);
             return Probe(modbus, addr);

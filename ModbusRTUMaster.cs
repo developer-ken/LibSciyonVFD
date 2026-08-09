@@ -4,13 +4,15 @@ using System.IO;
 using System.IO.Ports;
 using System.Threading;
 using static LibSciyonVFD.VFDDevice;
+using LibSciyonVFD.Serial;
 
 namespace LibSciyonVFD
 {
     public class ModbusRTUMaster
     {
         private readonly SerialPort _port;
-        private readonly int _responseTimeoutMs;
+        private readonly ISerialPort _customPort;
+        public int ResponseTimeoutMs;
         private int BaudRate;
         private PortConfig CommConfig;
 
@@ -19,7 +21,7 @@ namespace LibSciyonVFD
             BaudRate = baudRate;
             CommConfig = commConfig;
             _port = port ?? throw new ArgumentNullException(nameof(port));
-            _responseTimeoutMs = responseTimeoutMs;
+            ResponseTimeoutMs = responseTimeoutMs;
             // make sure port has sensible timeouts
             try
             {
@@ -29,8 +31,34 @@ namespace LibSciyonVFD
             catch { }
         }
 
+        // New constructor for custom cross-platform serial implementations
+        public ModbusRTUMaster(ISerialPort port, int baudRate, PortConfig commConfig, int responseTimeoutMs = 1000)
+        {
+            BaudRate = baudRate;
+            CommConfig = commConfig;
+            _customPort = port ?? throw new ArgumentNullException(nameof(port));
+            ResponseTimeoutMs = responseTimeoutMs;
+            try
+            {
+                _customPort.SetTimeouts(50, 1000);
+                _customPort.Configure(baudRate, commConfig);
+            }
+            catch { }
+        }
+
         public void UpdatePortconfig()
         {
+            // If using custom ISerialPort, delegate configuration to it
+            if (_customPort != null)
+            {
+                try
+                {
+                    _customPort.Configure(BaudRate, CommConfig);
+                }
+                catch { }
+                return;
+            }
+
             bool changed = false;
             changed |= _port.BaudRate != BaudRate;
             switch (CommConfig)
@@ -207,6 +235,49 @@ namespace LibSciyonVFD
 
         private byte[] SendAndReceive(byte[] request)
         {
+            if (_customPort != null)
+            {
+                lock (_customPort)
+                {
+                    UpdatePortconfig();
+                    try { if (_customPort.IsOpen) _customPort.DiscardInBuffer(); } catch { }
+
+                    _customPort.Write(request, 0, request.Length);
+
+                    var swc = System.Diagnostics.Stopwatch.StartNew();
+                    var received = new List<byte>();
+                    while (swc.ElapsedMilliseconds < ResponseTimeoutMs)
+                    {
+                        try
+                        {
+                            while (_customPort.BytesToRead > 0)
+                            {
+                                int toRead = _customPort.BytesToRead;
+                                var buf = new byte[toRead];
+                                int r = _customPort.Read(buf, 0, toRead);
+                                for (int i = 0; i < r; i++) received.Add(buf[i]);
+                            }
+                        }
+                        catch (TimeoutException) { }
+
+                        if (received.Count >= 5)
+                        {
+                            int expected = ExpectedResponseLength(received);
+                            if (expected > 0 && received.Count >= expected)
+                            {
+                                var arr = received.ToArray();
+                                if (!ValidateCrc(arr)) throw new InvalidDataException("CRC error in response");
+                                Thread.Sleep(Math.Max(33000 / BaudRate,1));
+                                return arr;
+                            }
+                        }
+                        Thread.Sleep(2);
+                    }
+
+                    throw new TimeoutException("Modbus RTU response timeout");
+                }
+            }
+
             lock (_port)
             {
                 UpdatePortconfig();
@@ -249,7 +320,7 @@ namespace LibSciyonVFD
                 // now wait for response
                 var sw = System.Diagnostics.Stopwatch.StartNew();
                 var received = new List<byte>();
-                while (sw.ElapsedMilliseconds < _responseTimeoutMs)
+                while (sw.ElapsedMilliseconds < ResponseTimeoutMs)
                 {
                     try
                     {
