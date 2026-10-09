@@ -428,6 +428,32 @@ namespace LibSciyonVFD
             return (Status)data[0];
         }
 
+        /// <summary>读取单个保持寄存器。</summary>
+        public ushort ReadRegister(ushort address)
+        {
+            var data = modbus.ReadHoldingRegisters(Addr, address, 1);
+            return data[0];
+        }
+
+        /// <summary>写入单个保持寄存器(带从站应答)。</summary>
+        public void WriteRegister(ushort address, ushort value)
+        {
+            modbus.WriteSingleRegister(Addr, address, value);
+        }
+
+        /// <summary>广播写入单个保持寄存器(地址 0, 无应答)。</summary>
+        public void WriteRegisterBroadcast(ushort address, ushort value)
+        {
+            try
+            {
+                modbus.WriteSingleRegister(0, address, value);
+            }
+            catch (TimeoutException)
+            {
+                // 广播写不返回应答, 超时视为已发送。
+            }
+        }
+
         public VFDStatus BriefStatus()
         {
             VFDStatus status = new VFDStatus();
@@ -548,9 +574,9 @@ namespace LibSciyonVFD
             modbus.WriteSingleRegister(Addr, (ushort)ControlParams.PIDGoal, s);
         }
 
-        public static Status Probe(SerialPort port, byte addr, int baudRate, PortConfig commConfig)
+        public static Status Probe(SerialPort port, byte addr, int baudRate, PortConfig commConfig, int responseTimeoutMs = 500)
         {
-            ModbusRTUMaster modbus = new ModbusRTUMaster(port, baudRate, commConfig, 500);
+            ModbusRTUMaster modbus = new ModbusRTUMaster(port, baudRate, commConfig, responseTimeoutMs);
             return Probe(modbus, addr);
         }
 
