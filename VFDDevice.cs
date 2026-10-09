@@ -2,21 +2,23 @@
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
+using LibSciyonVFD.Serial;
 
 namespace LibSciyonVFD
 {
     public class VFDDevice
     {
-        private SerialPort port;
         public byte Addr { private set; get; }
-        public int BaudRate { private set; get; }
-        public PortConfig CommConfig { private set; get; }
         public VFDConfiguration Config { private set; get; }
 
-        public int MaxRetriesForSingleAccess = 2;
+        public int MaxRetriesForSingleAccess = 5;
+
+        public bool IsViaRJ45 => Addr == 1 && modbus.BaudRate == 38400 && modbus.CommConfig == PortConfig.R181N;
+
+        private ModbusRTUMaster modbus;
 
 
-        public static ErrorInfo[] ErrorInfos = new ErrorInfo[]
+        public static ErrorInfo[] ErrorInfos { private set; get; } = new ErrorInfo[]
         {
             new ErrorInfo{ Code = ErrorCode.Void, Message = "No error", Description = "No error", Suggestion = "No action needed" },
             new ErrorInfo{ Code = ErrorCode.EuU, Message = "母线欠压", Description = "内部直流母线电压过低", Suggestion = "检查输入电压是否正常。如果无法自行解决，请联系技术支持。" },
@@ -51,15 +53,10 @@ namespace LibSciyonVFD
             // Add more error codes as needed
         };
 
-
-        private ModbusRTUMaster modbus;
-
         public struct VFDStatus
         {
             public Status Status { internal set; get; }
-            public float Current { internal set; get; }
-            public float RailVotage { internal set; get; }
-            public float LoadPercentage { internal set; get; }
+            public ErrorCode ErrorCode { internal set; get; }
         }
 
         public struct ErrorInfo
@@ -207,20 +204,40 @@ namespace LibSciyonVFD
         public enum Status
         {
             Void = 0,
-            RunningForward = 0b0001 << 4,
-            RunningReverse = 0b0010 << 4,
-            Idle = 0b0011 << 4,
-            Error = 0b0100 << 4
+            RunningForward = 0b0001,
+            RunningReverse = 0b0010,
+            Idle = 0b0011,
+            Error = 0b0100
         }
 
         public VFDDevice(SerialPort port, byte addr, int baudRate, PortConfig commConfig, VFDConfiguration config = null)
         {
-            this.port = port;
             Addr = addr;
-            BaudRate = baudRate;
-            CommConfig = commConfig;
             Config = config;
             modbus = new ModbusRTUMaster(port, baudRate, commConfig, 500);
+            if (Config is null)
+            {
+                Config = new VFDConfiguration();
+            }
+        }
+
+        // Cross-platform constructor using ISerialPort
+        public VFDDevice(ISerialPort port, byte addr, int baudRate, PortConfig commConfig, VFDConfiguration config = null)
+        {
+            Addr = addr;
+            Config = config;
+            modbus = new ModbusRTUMaster(port, baudRate, commConfig, 500);
+            if (Config is null)
+            {
+                Config = new VFDConfiguration();
+            }
+        }
+
+        public VFDDevice(ModbusRTUMaster modbus, byte addr, VFDConfiguration config = null)
+        {
+            Addr = addr;
+            Config = config;
+            this.modbus = modbus;
             if (Config is null)
             {
                 Config = new VFDConfiguration();
@@ -277,6 +294,10 @@ namespace LibSciyonVFD
                         }
                     }
                 }
+                catch (TimeoutException)
+                {
+                    throw;
+                }
                 catch
                 {
                     Console.WriteLine($"! Error reading sector {ItemsInGroup.First().Index.CodeDomain}-{ItemsInGroup.First().Index.CodeId}~{ItemsInGroup.Last().Index.CodeId}, skipped.");
@@ -298,6 +319,11 @@ namespace LibSciyonVFD
                 try
                 {
                     skipped_by_code = item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning);
+                    if(item.Index.CodeDomain == "PC" && !IsViaRJ45)
+                    {
+                        skipped_by_code = true;
+                        Console.WriteLine("! Refuse writing to PC-** when not accessing from RJ45 !");
+                    }
                     if (
                         ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 16)
                         && !skipped_by_code
@@ -345,6 +371,10 @@ namespace LibSciyonVFD
                         goto _BEGINPROCESS;
                     }
                 }
+                catch (TimeoutException)
+                {
+                    throw;
+                }
                 catch
                 {
                     Console.WriteLine($"! Error writing sector {ItemsInGroup.First().Index.CodeDomain}-{ItemsInGroup.First().Index.CodeId}~{ItemsInGroup.Last().Index.CodeId}, skipped.");
@@ -354,8 +384,9 @@ namespace LibSciyonVFD
             }
         }
 
-        public void WriteModified()
+        public int WriteModified()
         {
+            int success = 0;
             List<ConfigItem> ItemsInGroup = new List<ConfigItem>();
             bool isRunning = Probe() >= Status.Idle;
             foreach (var item in Config.ByCode.Values)
@@ -366,6 +397,11 @@ namespace LibSciyonVFD
                 try
                 {
                     skipped_by_code = ((!item.Modified) || (item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning)));
+                    if (item.Index.CodeDomain == "PC" && !IsViaRJ45)
+                    {
+                        skipped_by_code = true;
+                        Console.WriteLine("! Refuse writing to PC-** when not accessing from RJ45 !");
+                    }
                     if (
                         ((ItemsInGroup.Count == 0 || ItemsInGroup.Last().Index.CodeDomain == item.Index.CodeDomain) && ItemsInGroup.Count < 16)
                         && !skipped_by_code
@@ -389,6 +425,7 @@ namespace LibSciyonVFD
                         {
                             Console.WriteLine($"*COM* WriteMultipleRegisters({Addr},0x{ItemsInGroup.First().Index.CodeAddr.ToString("X4")})");
                             modbus.WriteMultipleRegisters(Addr, ItemsInGroup.First().Index.CodeAddr, collected);
+                            success += collected.Length;
                         }
                         catch (InvalidOperationException ex)
                         {
@@ -413,6 +450,10 @@ namespace LibSciyonVFD
                         goto _BEGINPROCESS;
                     }
                 }
+                catch (TimeoutException)
+                {
+                    throw;
+                }
                 catch
                 {
                     Console.WriteLine($"! Error writing sector {ItemsInGroup.First().Index.CodeDomain}-{ItemsInGroup.First().Index.CodeId}~{ItemsInGroup.Last().Index.CodeId}, skipped.");
@@ -420,12 +461,19 @@ namespace LibSciyonVFD
                     goto _BEGINPROCESS;
                 }
             }
+            return success;
+        }
+
+        public bool CanWrite(ConfigItem item)
+        {
+            var st = Probe();
+            bool isRunning = st == Status.RunningForward || st == Status.RunningReverse;
+            return !(item.IsReadonly == ReadOnly.Always || (item.IsReadonly == ReadOnly.WhenRuning && isRunning));
         }
 
         public Status Probe()
         {
-            var data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 1);
-            return (Status)data[0];
+            return Probe(modbus, Addr);
         }
 
         /// <summary>读取单个保持寄存器。</summary>
@@ -456,16 +504,24 @@ namespace LibSciyonVFD
 
         public VFDStatus BriefStatus()
         {
+            return BriefStatus(modbus, Addr);
+        }
+
+        public static VFDStatus BriefStatus(ModbusRTUMaster modbus, byte Addr)
+        {
             VFDStatus status = new VFDStatus();
-            var data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 6);
+            var data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 2);
             status.Status = (Status)data[0];
-            status.RailVotage = data[1] / 10.0f;
-            status.Current = data[2] / 10.0f;
-            status.LoadPercentage = data[5] / 10.0f;
+            status.ErrorCode = (ErrorCode)data[1];
             return status;
         }
 
         public VFDStatusParams ReadDetailStatus()
+        {
+            return ReadDetailStatus(modbus, Addr);
+        }
+
+        public static VFDStatusParams ReadDetailStatus(ModbusRTUMaster modbus, byte Addr)
         {
             VFDStatusParams status = new VFDStatusParams();
             var data = modbus.ReadHoldingRegisters(Addr, (ushort)StatusParams.StatusWord, 16);
@@ -577,6 +633,12 @@ namespace LibSciyonVFD
         public static Status Probe(SerialPort port, byte addr, int baudRate, PortConfig commConfig, int responseTimeoutMs = 500)
         {
             ModbusRTUMaster modbus = new ModbusRTUMaster(port, baudRate, commConfig, responseTimeoutMs);
+            return Probe(modbus, addr);
+        }
+
+        public static Status Probe(ISerialPort port, byte addr, int baudRate, PortConfig commConfig)
+        {
+            ModbusRTUMaster modbus = new ModbusRTUMaster(port, baudRate, commConfig, 500);
             return Probe(modbus, addr);
         }
 
